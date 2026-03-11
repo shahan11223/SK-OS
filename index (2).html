@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SK-OS TITAN ERP | SHAHAN KHAN</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&family=Poppins:wght@300;400;600&display=swap');
+        
+        /* Default Dark Mode Variables */
+        :root { 
+            --p: #00f2ff; 
+            --s: #ff6600; 
+            --bg: #020205; 
+            --card: #0d0d15; 
+            --text: #e0e0e0; 
+            --sub-text: #888;
+            --danger: #ff3f34; 
+            --success: #00ff88; 
+            --border: rgba(255,255,255,0.05); 
+            --sidebar-bg: #050508;
+        }
+        
+        /* Day Mode (Light Mode) Variables - Optimized for Visibility */
+        [data-theme="light"] { 
+            --bg: #f0f2f5; 
+            --card: #ffffff; 
+            --text: #1a1a1a; /* Dark text for contrast */
+            --sub-text: #555555;
+            --border: #d1d5db; 
+            --sidebar-bg: #ffffff;
+            --p: #0078d4; /* Deep Blue for visibility on white */
+        }
+
+        * { box-sizing: border-box; transition: 0.2s; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; overflow: hidden; height: 100vh; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--p); border-radius: 10px; }
+        
+        .glass { background: var(--card); border: 1px solid var(--border); border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 20px; position: relative; overflow: hidden; }
+        .stat-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: var(--p); opacity: 0.3; }
+        .stat-card i { position: absolute; right: 20px; top: 20px; font-size: 30px; opacity: 0.1; color: var(--p); }
+        .stat-card h4 { margin: 0; font-size: 12px; text-transform: uppercase; color: var(--sub-text); letter-spacing: 1px; }
+        .stat-card h2 { margin: 10px 0; font-family: 'JetBrains Mono'; color: var(--p); font-size: 28px; }
+        
+        .progress-bar { height: 4px; background: rgba(0,0,0,0.1); border-radius: 10px; margin-top: 15px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--p); box-shadow: 0 0 10px var(--p); width: 70%; }
+
+        .btn { background: var(--p); color: #fff; border: none; padding: 10px 15px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 11px; display: inline-flex; align-items: center; gap: 5px; }
+        [data-theme="light"] .btn { color: white; }
+        .btn-print { background: #555; color: white; }
+        .btn-del { background: var(--danger); color: white; }
+        .btn-edit { background: #ffcc00; color: #000; }
+        
+        input, select, textarea { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 12px; font-family: 'JetBrains Mono'; outline: none; }
+        
+        .layout { display: grid; grid-template-columns: 240px 1fr; height: 100vh; }
+        .sidebar { background: var(--sidebar-bg); display: flex; flex-direction: column; padding: 20px; gap: 5px; border-right: 1px solid var(--border); overflow-y: auto; }
+        
+        .sidebar h4 { color: var(--sub-text); font-size: 10px; text-transform: uppercase; letter-spacing: 2px; margin: 20px 0 10px 10px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-radius: 10px; cursor: pointer; color: var(--sub-text); font-size: 14px; }
+        .nav-item.active { background: rgba(0, 120, 212, 0.1); color: var(--p); }
+        
+        .logout-btn { margin-top: auto; background: var(--danger); color: white; padding: 12px; border-radius: 10px; border: none; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+
+        .main { overflow-y: auto; padding: 30px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 25px; }
+        th { text-align: left; padding: 15px; background: rgba(0,0,0,0.03); color: var(--s); font-size: 12px; }
+        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text); }
+        
+        .badge { padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .bg-success { background: rgba(0,255,136,0.1); color: var(--success); }
+        .att-row { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.02); padding: 12px 20px; margin-bottom: 8px; border-radius: 10px; border: 1px solid var(--border); }
+        
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; }
+        .modal-content { width:500px; background:var(--card); padding:30px; border-radius:20px; border:1px solid var(--p); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .theme-icon { cursor: pointer; font-size: 18px; color: var(--p); padding: 8px; transition: 0.3s; border-radius: 50%; background: rgba(0,0,0,0.05); }
+
+        @media print {
+            .sidebar, header, .btn, .nav-item, .modal, input[type="date"] { display: none !important; }
+            .main { padding: 0; width: 100%; }
+            .glass { border: none; background: white !important; color: black !important; }
+            table, th, td { color: black !important; border: 1px solid #ddd !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="layout">
+        <nav class="sidebar">
+            <div style="padding: 10px 15px; margin-bottom: 20px;">
+                <h2 style="font-family:'Orbitron'; color:var(--p); margin:0; font-size:22px;">SK-OS</h2>
+                <small style="color:var(--sub-text)">ERP ENTERPRISE v28.0</small>
+            </div>
+            <h4>Main Menu</h4>
+            <div class="nav-item active" onclick="showTab('dash', this)"><i class="fas fa-chart-pie"></i> Dashboard</div>
+            <h4>Human Resources</h4>
+            <div class="nav-item" onclick="showTab('staff', this)"><i class="fas fa-users-cog"></i> Staff Management</div>
+            <div class="nav-item" onclick="showTab('salary', this)"><i class="fas fa-money-check-alt"></i> Payroll & Attendance</div>
+            <h4>Assets & Ops</h4>
+            <div class="nav-item" onclick="showTab('equip', this)"><i class="fas fa-boxes"></i> Inventory Control</div>
+            <div class="nav-item" onclick="showTab('comp', this)"><i class="fas fa-tools"></i> Complaint Tracker</div>
+            <div class="nav-item" onclick="showTab('sched', this)"><i class="fas fa-calendar-check"></i> Lab Schedule</div>
+            <h4>Analytics</h4>
+            <div class="nav-item" onclick="showTab('reports', this)"><i class="fas fa-file-invoice"></i> Reports Export</div>
+            
+            <button class="logout-btn" onclick="window.location.reload()">
+                <i class="fas fa-power-off"></i> LOGOUT
+            </button>
+        </nav>
+
+        <div class="main">
+            <header>
+                <div><h3 style="margin:0">Admin Overview</h3><small id="real-time" style="color:var(--p)"></small></div>
+                <div style="display:flex; align-items:center; gap:15px; background:var(--card); padding:8px 15px; border-radius:50px; border:1px solid var(--border);">
+                    <i id="mode-icon" class="fas fa-moon theme-icon" onclick="toggleMode()"></i>
+                    <div style="text-align:right"><span style="display:block; font-size:12px; font-weight:600">SHAHAN KHAN</span><span class="badge bg-success">SUPER ADMIN</span></div>
+                    <img src="https://i.ibb.co/ZzXpW9L/shahan.jpg" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--p);">
+                </div>
+            </header>
+
+            <div id="dash" class="tab-content active">
+                <div class="dash-grid">
+                    <div class="stat-card"><i class="fas fa-users"></i><h4>Active Staff</h4><h2 id="d-staff">0</h2><div class="progress-bar"><div class="progress-fill"></div></div></div>
+                    <div class="stat-card" style="border-bottom: 1px solid var(--s)"><i class="fas fa-desktop"></i><h4>Lab Assets</h4><h2 id="d-inv">0</h2><div class="progress-bar"><div class="progress-fill" style="background: var(--s); width: 60%"></div></div></div>
+                    <div class="stat-card" style="border-bottom: 1px solid var(--danger)"><i class="fas fa-exclamation-triangle"></i><h4>Issues</h4><h2 id="d-iss">0</h2><div class="progress-bar"><div class="progress-fill" style="background: var(--danger); width: 40%"></div></div></div>
+                    <div class="stat-card" style="border-bottom: 1px solid var(--success)"><i class="fas fa-calendar-day"></i><h4>Lab Sessions</h4><h2 id="d-sched">0</h2><div class="progress-bar"><div class="progress-fill" style="background: var(--success); width: 90%"></div></div></div>
+                </div>
+                <div class="glass"><h4 style="color:var(--p); margin-top:0">System Message</h4><p style="font-size:13px; color:var(--sub-text)">Welcome Shahan. All systems operational in your Network and cybersecurity Lab.</p></div>
+            </div>
+
+            <div id="staff" class="tab-content"><div class="glass"><div style="display:flex; justify-content:space-between"><h3>Staff Registry</h3><button class="btn" onclick="openM('staff')">+ Add Staff</button></div><table><thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Salary</th><th>Passkey</th><th>Actions</th></tr></thead><tbody id="staff-body"></tbody></table></div></div>
+            <div id="salary" class="tab-content"><div class="glass"><h3>Attendance Log</h3><input type="date" id="att-date" onchange="renderAttendance()" style="width:200px; margin-bottom:20px"><div id="att-list-container"></div></div></div>
+
+            <div id="equip" class="tab-content">
+                <div class="glass">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3>Inventory & IT Control</h3>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> Print Inventory</button>
+                            <button class="btn" onclick="openM('equip')">+ Add Hardware</button>
+                            <button class="btn" style="background:var(--s); color:white" onclick="openM('lab_sys')">+ Add PC Specs</button>
+                            <button class="btn" style="background:var(--success); color:#000" onclick="openM('lab_sw')">+ Add Software</button>
+                        </div>
+                    </div>
+                    <h4 style="color:var(--p); margin-top:20px;"><i class="fas fa-plug"></i> General Hardware</h4>
+                    <table><thead><tr><th>Item</th><th>Serial</th><th>Status</th><th>Actions</th></tr></thead><tbody id="equip-body"></tbody></table>
+                    <h4 style="color:var(--s); margin-top:30px;"><i class="fas fa-microchip"></i> Lab PC Specifications</h4>
+                    <table><thead><tr><th>PC</th><th>Generation</th><th>RAM</th><th>Storage</th><th>Actions</th></tr></thead><tbody id="lab-sys-body"></tbody></table>
+                    <h4 style="color:var(--success); margin-top:30px;"><i class="fas fa-save"></i> Software Inventory</h4>
+                    <table><thead><tr><th>Software Name</th><th>Version</th><th>PC Assigned</th><th>Actions</th></tr></thead><tbody id="lab-sw-body"></tbody></table>
+                </div>
+            </div>
+
+            <div id="comp" class="tab-content"><div class="glass"><div style="display:flex; justify-content:space-between"><h3>Complaints</h3><button class="btn" onclick="openM('comp')">+ New Entry</button></div><table><thead><tr><th>Issue</th><th>Assigned</th><th>Priority</th><th>Actions</th></tr></thead><tbody id="comp-body"></tbody></table></div></div>
+            <div id="sched" class="tab-content"><div class="glass"><div style="display:flex; justify-content:space-between"><h3>Lab Schedule</h3><button class="btn" onclick="openM('sched')">+ Add Session</button></div><table><thead><tr><th>Day</th><th>Time</th><th>Subject</th><th>Instructor</th><th>Actions</th></tr></thead><tbody id="sched-body"></tbody></table></div></div>
+
+            <div id="reports" class="tab-content">
+                <div class="glass">
+                    <h3>Cloud Export</h3>
+                    <p style="font-size:12px; color:var(--sub-text)">Connected: shahanullah@imsciences.edu.pk</p>
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button class="btn" style="background:#1D6F42; color:white;" onclick="doExport('excel')"><i class="fas fa-file-excel"></i> Excel Export</button>
+                        <button class="btn" style="background:#E74C3C; color:white;" onclick="doExport('pdf')"><i class="fas fa-file-pdf"></i> PDF Export</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal"><div class="modal-content"><h3 id="m-title" style="color:var(--p)">Entry</h3><div id="m-fields"></div><div style="display:flex; gap:10px; margin-top:20px"><button class="btn" onclick="save()">SAVE</button><button class="btn btn-del" onclick="closeM()">CANCEL</button></div></div></div>
+
+    <script>
+        // Logic starts here - no changes to original functionality
+        let mode = '', editId = -1;
+        let db = {
+            staff: JSON.parse(localStorage.getItem('erp_staff')) || [],
+            equip: JSON.parse(localStorage.getItem('erp_inv')) || [],
+            lab_sys: JSON.parse(localStorage.getItem('erp_lab_sys')) || [],
+            lab_sw: JSON.parse(localStorage.getItem('erp_lab_sw')) || [],
+            comp: JSON.parse(localStorage.getItem('erp_comp')) || [],
+            sched: JSON.parse(localStorage.getItem('erp_sched')) || [],
+            att: JSON.parse(localStorage.getItem('erp_att_v27')) || {}
+        };
+
+        function toggleMode() {
+            const body = document.body;
+            const icon = document.getElementById('mode-icon');
+            if(body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                icon.className = "fas fa-moon theme-icon";
+            } else {
+                body.setAttribute('data-theme', 'light');
+                icon.className = "fas fa-sun theme-icon";
+            }
+        }
+
+        function showTab(id, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active'); el.classList.add('active');
+        }
+
+        function openM(m, id=-1) {
+            mode = m; editId = id;
+            const f = document.getElementById('m-fields');
+            document.getElementById('m-title').innerText = (id === -1 ? "Add " : "Edit ") + m.replace('_', ' ').toUpperCase();
+            
+            if(m === 'staff') {
+                const d = id === -1 ? {id:'', n:'', r:'Staff', s:1780, p:''} : db.staff[id];
+                f.innerHTML = `<input id="f1" placeholder="ID" value="${d.id}"><input id="f2" placeholder="Name" value="${d.n}"><select id="f3"><option ${d.r==='Admin'?'selected':''}>Admin</option><option ${d.r==='Staff'?'selected':''}>Staff</option></select><input id="f4" type="number" placeholder="Salary" value="${d.s}"><input id="f5" type="text" placeholder="Access Password" value="${d.p || ''}">`;
+            } else if(m === 'equip') {
+                const d = id === -1 ? {n:'', s:'', st:'Working'} : db.equip[id];
+                f.innerHTML = `<input id="f1" placeholder="Hardware Item" value="${d.n}"><input id="f2" placeholder="Serial No" value="${d.s}"><select id="f3"><option>Working</option><option>Faulty</option></select>`;
+            } else if(m === 'lab_sys') {
+                const d = id === -1 ? {id:'', gen:'', ram:'', disk:''} : db.lab_sys[id];
+                f.innerHTML = `<input id="f1" placeholder="PC ID" value="${d.id}"><input id="f2" placeholder="Generation" value="${d.gen}"><input id="f3" placeholder="RAM" value="${d.ram}"><input id="f4" placeholder="Storage" value="${d.disk}">`;
+            } else if(m === 'lab_sw') {
+                const d = id === -1 ? {name:'', ver:'', pc:''} : db.lab_sw[id];
+                f.innerHTML = `<input id="f1" placeholder="Software Name" value="${d.name}"><input id="f2" placeholder="Version" value="${d.ver}"><input id="f3" placeholder="Target PC" value="${d.pc}">`;
+            } else if(m === 'comp') {
+                const d = id === -1 ? {d:'', a:'', p:'Low'} : db.comp[id];
+                f.innerHTML = `<textarea id="f1" placeholder="Describe Issue">${d.d}</textarea><input id="f2" placeholder="Assigned To" value="${d.a}"><select id="f3"><option>Low</option><option>High</option><option>Critical</option></select>`;
+            } else if(m === 'sched') {
+                const d = id === -1 ? {day:'Monday', st:'09:00', et:'11:00', sub:'', inst:''} : db.sched[id];
+                f.innerHTML = `<select id="f1"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select><div style="display:flex; gap:10px"><input type="time" id="f2" value="${d.st}"><input type="time" id="f2b" value="${d.et}"></div><input id="f3" placeholder="Subject" value="${d.sub}"><input id="f4" placeholder="Instructor" value="${d.inst}">`;
+            }
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function save() {
+            const v1 = document.getElementById('f1').value, v2 = document.getElementById('f2').value, v3 = document.getElementById('f3').value;
+            let entry = {};
+            if(mode==='staff') entry={id:v1, n:v2, r:v3, s:document.getElementById('f4').value, p:document.getElementById('f5').value};
+            else if(mode==='equip') entry={n:v1, s:v2, st:v3};
+            else if(mode==='lab_sys') entry={id:v1, gen:v2, ram:v3, disk:document.getElementById('f4').value};
+            else if(mode==='lab_sw') entry={name:v1, ver:v2, pc:v3};
+            else if(mode==='comp') entry={d:v1, a:v2, p:v3};
+            else if(mode==='sched') entry={day:v1, st:v2, et:document.getElementById('f2b').value, sub:v3, inst:document.getElementById('f4').value};
+            
+            if(editId === -1) db[mode].push(entry);
+            else db[mode][editId] = entry;
+
+            localStorage.setItem('erp_'+mode, JSON.stringify(db[mode]));
+            render(); renderAttendance(); closeM();
+        }
+
+        function del(m, idx) { if(confirm("Delete this record?")) { db[m].splice(idx,1); localStorage.setItem('erp_'+m, JSON.stringify(db[m])); render(); } }
+
+        function render() {
+            document.getElementById('staff-body').innerHTML = db.staff.map((x,i) => `<tr><td>${x.id}</td><td>${x.n}</td><td>${x.r}</td><td>${x.s}</td><td><code style="color:var(--p)">${x.p || '---'}</code></td><td><button class="btn btn-edit" onclick="openM('staff',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-del" onclick="del('staff',${i})"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+            document.getElementById('equip-body').innerHTML = db.equip.map((x,i) => `<tr><td>${x.n}</td><td>${x.s}</td><td>${x.st}</td><td><button class="btn btn-edit" onclick="openM('equip',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-del" onclick="del('equip',${i})"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+            document.getElementById('lab-sys-body').innerHTML = db.lab_sys.map((x,i) => `<tr><td><b>${x.id}</b></td><td>${x.gen}</td><td>${x.ram}</td><td>${x.disk}</td><td><button class="btn btn-edit" onclick="openM('lab_sys',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-del" onclick="del('lab_sys',${i})"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+            document.getElementById('lab-sw-body').innerHTML = db.lab_sw.map((x,i) => `<tr><td>${x.name}</td><td>${x.ver}</td><td>${x.pc}</td><td><button class="btn btn-edit" onclick="openM('lab_sw',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-del" onclick="del('lab_sw',${i})"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+            document.getElementById('comp-body').innerHTML = db.comp.map((x,i) => `<tr><td>${x.d}</td><td>${x.a}</td><td>${x.p}</td><td><button class="btn btn-edit" onclick="openM('comp',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-del" onclick="del('comp',${i})"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+            document.getElementById('sched-body').innerHTML = db.sched.map((x,i) => `<tr><td>${x.day}</td><td>${x.st}-${x.et}</td><td>${x.sub}</td><td>${x.inst}</td><td><button class="btn btn-edit" onclick="openM('sched',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-del" onclick="del('sched',${i})"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+            
+            document.getElementById('d-staff').innerText = db.staff.length;
+            document.getElementById('d-inv').innerText = db.equip.length + db.lab_sys.length;
+            document.getElementById('d-iss').innerText = db.comp.length;
+            document.getElementById('d-sched').innerText = db.sched.length;
+        }
+
+        function renderAttendance() {
+            const date = document.getElementById('att-date').value;
+            if(!date) return;
+            document.getElementById('att-list-container').innerHTML = db.staff.map(emp => {
+                const status = (db.att[date] && db.att[date][emp.id]) || 'Absent';
+                return `<div class="att-row"><span>${emp.n}</span><div class="tick-group">
+                    <label class="tick-item"><input type="radio" name="st-${emp.id}" ${status==='Present'?'checked':''} onchange="setAtt('${emp.id}','Present')"> <span style="color:var(--success)">P</span></label>
+                    <label class="tick-item"><input type="radio" name="st-${emp.id}" ${status==='Absent'?'checked':''} onchange="setAtt('${emp.id}','Absent')"> <span style="color:var(--danger)">A</span></label>
+                </div></div>`;
+            }).join('');
+        }
+
+        function setAtt(id, s) { const d = document.getElementById('att-date').value; if(!db.att[d]) db.att[d]={}; db.att[d][id]=s; localStorage.setItem('erp_att_v27', JSON.stringify(db.att)); }
+        
+        function doExport(type) {
+            const email = "shahanullah@imsciences.edu.pk";
+            if(type==='excel'){
+                const ws = XLSX.utils.json_to_sheet(db.staff);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Staff");
+                XLSX.writeFile(wb, "SK_OS_Staff_Report.xlsx");
+            } else {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.text("SK-OS Staff Report", 14, 15);
+                doc.autoTable({ head: [['ID', 'Name', 'Role', 'Salary']], body: db.staff.map(s=>[s.id, s.n, s.r, s.s]) });
+                doc.save("SK_OS_Report.pdf");
+            }
+            window.location.href = `mailto:${email}?subject=ERP Export Notification&body=New report has been generated for Shahan. Data is ready for cloud synchronization.`;
+        }
+
+        function closeM() { document.getElementById('modal').style.display = 'none'; }
+        setInterval(() => { document.getElementById('real-time').innerText = new Date().toLocaleString(); }, 1000);
+        render(); renderAttendance();
+    </script>
+</body>
+</html>

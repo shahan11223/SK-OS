@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SK-OS TITAN ERP | Enterprise Access</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --border: #e2e8f0;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --danger: #ff3f34;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+            color: var(--text-dark);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated Background Shapes */
+        .shape {
+            position: absolute;
+            z-index: -1;
+            filter: blur(80px);
+            border-radius: 50%;
+            animation: move 20s infinite alternate;
+        }
+        .shape-1 { width: 400px; height: 400px; background: rgba(37, 99, 235, 0.1); top: -100px; right: -50px; }
+        .shape-2 { width: 350px; height: 350px; background: rgba(147, 51, 234, 0.1); bottom: -50px; left: -50px; }
+
+        @keyframes move {
+            from { transform: translate(0, 0); }
+            to { transform: translate(50px, 50px); }
+        }
+
+        /* Loading Animation Overlay */
+        .loader-wrapper {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error Alert Style */
+        .error-alert {
+            display: none;
+            background: rgba(255, 63, 52, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .login-card {
+            width: 420px;
+            padding: 40px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid #fff;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header { text-align: center; margin-bottom: 30px; }
+        .header .brand-icon {
+            width: 60px; height: 60px;
+            background: var(--primary);
+            color: white;
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; margin: 0 auto 12px auto;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+
+        .form-group { margin-bottom: 20px; position: relative; }
+        .input-box { position: relative; display: flex; align-items: center; }
+        .input-box i.main-icon { position: absolute; left: 16px; color: var(--text-muted); }
+
+        input {
+            width: 100%;
+            padding: 14px 14px 14px 48px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+
+        .eye-icon { position: absolute; right: 16px; color: var(--text-muted); cursor: pointer; }
+
+        .login-btn {
+            width: 100%; padding: 14px;
+            background: var(--primary);
+            border: none; border-radius: 12px;
+            color: white; font-weight: 600; font-size: 16px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .login-btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+        .footer { margin-top: 25px; text-align: center; font-size: 14px; color: var(--text-muted); }
+        .footer span { color: var(--primary); font-weight: 600; cursor: pointer; }
+
+        /* Support Modal */
+        .modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px);
+            z-index: 3000; align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: #fff; padding: 30px; border-radius: 24px;
+            width: 350px; text-align: center;
+        }
+        .contact-btn {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 15px; margin-bottom: 10px;
+            background: #f1f5f9; border-radius: 10px;
+            text-decoration: none; color: var(--text-dark);
+            font-size: 14px; font-weight: 500;
+            transition: 0.2s;
+            border: 1px solid transparent;
+        }
+        .contact-btn:hover { background: #e2e8f0; border-color: var(--primary); transform: translateX(5px); }
+    </style>
+</head>
+<body>
+
+    <div class="loader-wrapper" id="loader">
+        <div class="spinner"></div>
+        <div style="margin-top:15px; font-weight:700; color:var(--primary); font-size:12px; letter-spacing:1px;">VERIFYING SECURITY...</div>
+    </div>
+
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+
+    <div class="login-card">
+        <div class="header">
+            <div class="brand-icon"><i class="fas fa-layer-group"></i></div>
+            <h2 style="font-size: 22px;">SK-OS TITAN ERP</h2>
+            <p style="font-size: 13px; color: var(--text-muted);">Enterprise Access Terminal</p>
+        </div>
+
+        <div class="error-alert" id="errorBox">
+            <i class="fas fa-times-circle"></i> Access Denied: Invalid Credentials
+        </div>
+
+        <div class="form-group">
+            <div class="input-box">
+                <i class="fas fa-user-circle main-icon"></i>
+                <input type="text" id="username" placeholder="Admin ID" autocomplete="off">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="input-box">
+                <i class="fas fa-shield-alt main-icon"></i>
+                <input type="password" id="password" placeholder="Passkey">
+                <i class="fas fa-eye eye-icon" id="toggleEye" onclick="togglePass()"></i>
+            </div>
+        </div>
+
+        <button class="login-btn" onclick="handleLogin()">Authorize & Sign In</button>
+
+        <div class="footer">
+            System Locked? <span onclick="openModal()">Contact Admin</span>
+        </div>
+    </div>
+
+    <div class="modal" id="contactModal">
+        <div class="modal-content">
+            <i class="fas fa-user-shield" style="font-size: 40px; color: var(--primary); margin-bottom: 15px;"></i>
+            <h3 style="margin-bottom:10px">Support Terminal</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Contact Shahan Khan for assistance.</p>
+            
+            <a href="https://wa.me/923178973735" class="contact-btn" target="_blank">
+                <i class="fab fa-whatsapp" style="color: #25D366; font-size: 20px;"></i> WhatsApp Support
+            </a>
+            
+            <a href="mailto:shahanullah@imsciences.edu.pk" class="contact-btn">
+                <i class="fas fa-envelope" style="color: #ea4335; font-size: 20px;"></i> Official Email
+            </a>
+
+            <a href="https://facebook.com/shahanullah890" class="contact-btn" target="_blank">
+                <i class="fab fa-facebook" style="color: #1877f2; font-size: 20px;"></i> Facebook Profile
+            </a>
+
+            <button onclick="closeModal()" style="margin-top:15px; border:none; background:none; color:var(--text-muted); cursor:pointer; font-size:13px; text-decoration:underline;">Return to Login</button>
+        </div>
+    </div>
+
+    <script>
+        function togglePass() {
+            const passField = document.getElementById('password');
+            const icon = document.getElementById('toggleEye');
+            if (passField.type === 'password') {
+                passField.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passField.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function handleLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const loader = document.getElementById('loader');
+            const errorBox = document.getElementById('errorBox');
+
+            errorBox.style.display = 'none';
+
+            if(!user || !pass) {
+                alert("Please enter credentials");
+                return;
+            }
+
+            loader.style.display = 'flex';
+
+            setTimeout(() => {
+                // Login check
+                if(user === "admin" && pass === "1234") {
+                    window.location.href = "dashboard.html"; 
+                } else {
+                    loader.style.display = 'none';
+                    errorBox.style.display = 'flex';
+                    document.getElementById('password').value = ''; 
+                }
+            }, 1500);
+        }
+
+        function openModal() { document.getElementById('contactModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('contactModal').style.display = 'none'; }
+        
+        window.onclick = function(e) { if (e.target.className === 'modal') closeModal(); }
+    </script>
+</body>
+</html>
